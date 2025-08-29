@@ -367,7 +367,7 @@ resource "google_access_context_manager_service_perimeter_resource" "service_per
   Attachment to VPC Service Control Perimeter in Dry Run Mode
  *****************************************/
 resource "google_access_context_manager_service_perimeter_dry_run_resource" "service_perimeter_attachment_dry_run" {
-  count          = var.vpc_service_control_attach_dry_run || var.vpc_service_control_attach_enabled ? 1 : 0
+  for_each       = var.vpc_service_control_attach_dry_run ? toset([google_project.main.number]) : toset([])
   depends_on     = [google_service_account.default_service_account]
   perimeter_name = var.vpc_service_control_perimeter_name
   resource       = "projects/${google_project.main.number}"

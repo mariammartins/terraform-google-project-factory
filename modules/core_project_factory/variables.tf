@@ -244,7 +244,7 @@ variable "vpc_service_control_attach_enabled" {
 variable "vpc_service_control_attach_dry_run" {
   description = "Whether the project will be attached to a VPC Service Control Perimeter in Dry Run Mode. vpc_service_control_attach_enabled should be false for this to be true"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "vpc_service_control_perimeter_name" {
