@@ -65,6 +65,8 @@ locals {
 
   # Workaround for https://github.com/hashicorp/terraform/issues/10857
   shared_vpc_users_length = var.create_project_sa ? 3 : 2
+  # chave = project_id, valor = project_number (string)
+  vpcsc_attach_target = { (google_project.main.project_id) = tostring(google_project.main.number) }
 }
 
 /*******************************************
@@ -357,20 +359,26 @@ resource "google_storage_bucket_iam_member" "api_s_account_storage_admin_on_proj
   Attachment to VPC Service Control Perimeter in Enforce Mode
  *****************************************/
 resource "google_access_context_manager_service_perimeter_resource" "service_perimeter_attachment" {
-  count          = var.vpc_service_control_attach_enabled ? 1 : 0
-  depends_on     = [google_service_account.default_service_account]
+  for_each       = (var.vpc_service_control_attach_enabled || var.vpc_service_control_attach_dry_run) ? local.vpcsc_attach_target : {}
   perimeter_name = var.vpc_service_control_perimeter_name
-  resource       = "projects/${google_project.main.number}"
+  resource       = "projects/${each.value}"
+  depends_on     = [google_service_account.default_service_account]
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 /******************************************
   Attachment to VPC Service Control Perimeter in Dry Run Mode
  *****************************************/
 resource "google_access_context_manager_service_perimeter_dry_run_resource" "service_perimeter_attachment_dry_run" {
-  for_each       = var.vpc_service_control_attach_dry_run ? toset([google_project.main.number]) : toset([])
-  depends_on     = [google_service_account.default_service_account]
+  for_each       = (var.vpc_service_control_attach_enabled || var.vpc_service_control_attach_dry_run) ? local.vpcsc_attach_target : {}
   perimeter_name = var.vpc_service_control_perimeter_name
-  resource       = "projects/${google_project.main.number}"
+  resource       = "projects/${each.value}"
+  depends_on     = [google_service_account.default_service_account]
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 /******************************************
